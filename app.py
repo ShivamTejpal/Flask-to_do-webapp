@@ -1,4 +1,4 @@
-from flask import Flask,render_template
+from flask import Flask,render_template,request
 #from flask_graphql import GraphQLView
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -21,11 +21,14 @@ class Todo(db.Model):
 
     def __repr__(self):
         return f"{self.srno} -{self.title}"
-@app.route('/')
+@app.route('/',methods=['GET','POST'])
 def hello_world():
+    if request.method=="POST":
+        print(request.form['title'])
     todo = Todo(title="First Todo",description="Start Investing")
     db.session.add(todo)
     db.session.commit()
+    allTodo = Todo.query.all()
     return render_template('index.html',allTodo=allTodo)
     #return 'Hello, World!'
 
@@ -33,7 +36,7 @@ def hello_world():
 def products():
     allTodo = Todo.query.all()
     print(allTodo)
-    return hello_world
+    return 'hello_world'
 
 if __name__ == '__main__':
     with app.app_context():

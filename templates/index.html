@@ -44,15 +44,15 @@
         </div>
       </nav>
       <div class="container my-4">
-        <form>
+        <form action="/"method="POST">
             <div class="form-group">
               <label for="exampleInputEmail1">Add Your Todos-</label>
-              <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Title">
+              <input type="text" class="form-control" name="title" id="title" aria-describedby="emailHelp" placeholder="Title">
               <small id="emailHelp" class="form-text text-muted"></small>
             </div>
             <div class="form-group">
               <label for="desc">Description</label>
-              <input type="text" class="form-control" id="desc" placeholder="Description">
+              <input type="text" class="form-control" name="description" id="desc" placeholder="Description">
             </div>
             <div class="form-group">
               
@@ -73,23 +73,15 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <th scope="row">1</th>
-                <td>Mark</td>
-                <td>Otto</td>
-                <td>@mdo</td>
-              </tr>
-              <tr>
-                <th scope="row">2</th>
-                <td>Jacob</td>
-                <td>Thornton</td>
-                <td>@fat</td>
-              </tr>
-              <tr>
-                <th scope="row">3</th>
-                <td colspan="2">Larry the Bird</td>
-                <td>@twitter</td>
-              </tr>
+             {% for todo in allTodo %}
+             <tr>
+              <th scope="row">{{loop.index}}</th>
+              <td> {{todo.title}}</td> 
+              <td>{{todo.description}}</td>
+              <td>{{todo.date_created}}</td>
+            </tr>
+             {% endfor %}
+              
             </tbody>
           </table>
       </div>
