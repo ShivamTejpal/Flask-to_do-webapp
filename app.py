@@ -22,8 +22,19 @@ app.config['OIDC_SCOPES'] = 'openid','email','profile'
 
 oidc = OpenIDConnect(app) 
 
+@app.route('/')
+@oidc.require_login
+def index():
+    if oidc.user_loggedin:
+        return render_template('index.html')
+    else:
+        return redirect(url_for(oidc.login))
 
-
+@app.route('/logout')
+def logout():
+    session.clear()
+    logout_url = oidc.client_secrets['issuer'] +'/protocol/openid-connect/logout'
+    return redirect(logout_url)
 class Todo(db.Model):
     srno = db.Column(db.Integer,primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -33,7 +44,6 @@ class Todo(db.Model):
     def __repr__(self):
         return f"{self.srno} -{self.title}"
 @app.route('/',methods=['GET','POST'])
-@oidc.require_login
 def hello_world():
     if request.method == "POST":
         title = request.form['title']
