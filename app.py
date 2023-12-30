@@ -40,11 +40,20 @@ def products():
     print(allTodo)
     return 'hello_world'
 
-@app.route('/update')
-def update():
-    allTodo = Todo.query.all()
-    print(allTodo)
-    return 'hello_world'
+@app.route('/update/<int:srno>', methods=['GET','POST'])
+def update(srno):
+    if request.method=='POST':
+        title = request.form['title']
+        description = request.form['description']
+        todo = Todo.query.filter_by(srno=srno).first()
+        todo.title=title
+        todo.description=description
+        db.session.add(todo)
+        db.session.commit()
+        return redirect("/")
+
+    todo = Todo.query.filter_by(srno=srno).first()
+    return render_template('update.html',todo=todo)
 
 @app.route('/delete/<int:srno>')
 def delete(srno):
