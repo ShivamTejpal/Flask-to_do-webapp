@@ -2,7 +2,8 @@ from flask import Flask,render_template,request,redirect
 #from flask_graphql import GraphQLView
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-
+from flask_oidc import OpenIDConnect
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///todo.db"
@@ -12,6 +13,16 @@ db = SQLAlchemy(app)
 #    '/graphql',
 #    view_func=GraphQLView.as_view('graphql', schema=schema, graphiql=True)
 #)
+app.config['SECRET_KEY'] = '123456'
+app.debug = True
+app.config['OIDC_CLIENT_SECRETS'] = 'client_secrets.json'
+app.config['OIDC_COOKIE_SECURE'] = False
+app.config['OIDC_CALLBACK_ROUTE'] = '/oidc/callback'
+app.config['OIDC_SCOPES'] = 'openid','email','profile'
+
+oidc = OpenIDConnect(app) 
+
+
 
 class Todo(db.Model):
     srno = db.Column(db.Integer,primary_key=True)
@@ -22,6 +33,7 @@ class Todo(db.Model):
     def __repr__(self):
         return f"{self.srno} -{self.title}"
 @app.route('/',methods=['GET','POST'])
+@oidc.require_login
 def hello_world():
     if request.method == "POST":
         title = request.form['title']
@@ -72,3 +84,6 @@ if __name__ == '__main__':
 #use from app import app,db
 #>>> with app.app_context():        
 #...     db.create_all()
+#to start env using cmd .\env\Scripts\activate
+#'kc.bat start-dev' to start kecloak dev port-'localhost:8080 '
+    
