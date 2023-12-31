@@ -1,9 +1,15 @@
-from flask import Flask,render_template,request,redirect
+from urllib.parse import quote_plus, urlencode
+from flask import Flask,render_template,request,redirect,jsonify
 #from flask_graphql import GraphQLView
+import json
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from flask_oidc import OpenIDConnect
-import json
+from authlib.integrations.flask_oauth2 import ResourceProtector
+from authlib.jose.rfc7517.jwk import JsonWebKey
+from authlib.oauth2.rfc7523 import JWTBearerTokenValidator
+from urllib.request import urlopen
+from authlib.integrations.flask_client import OAuth
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///todo.db"
@@ -13,28 +19,9 @@ db = SQLAlchemy(app)
 #    '/graphql',
 #    view_func=GraphQLView.as_view('graphql', schema=schema, graphiql=True)
 #)
-app.config['SECRET_KEY'] = '123456'
-app.debug = True
-app.config['OIDC_CLIENT_SECRETS'] = 'client_secrets.json'
-app.config['OIDC_COOKIE_SECURE'] = False
-app.config['OIDC_CALLBACK_ROUTE'] = '/oidc/callback'
-app.config['OIDC_SCOPES'] = 'openid','email','profile'
 
-oidc = OpenIDConnect(app) 
 
-@app.route('/')
-@oidc.require_login
-def index():
-    if oidc.user_loggedin:
-        return render_template('index.html')
-    else:
-        return redirect(url_for(oidc.login))
 
-@app.route('/logout')
-def logout():
-    session.clear()
-    logout_url = oidc.client_secrets['issuer'] +'/protocol/openid-connect/logout'
-    return redirect(logout_url)
 class Todo(db.Model):
     srno = db.Column(db.Integer,primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -43,8 +30,10 @@ class Todo(db.Model):
 
     def __repr__(self):
         return f"{self.srno} -{self.title}"
+
+
 @app.route('/',methods=['GET','POST'])
-def hello_world():
+def home():
     if request.method == "POST":
         title = request.form['title']
         description = request.form['description']
@@ -55,13 +44,15 @@ def hello_world():
     allTodo = Todo.query.all()
     return render_template('index.html',allTodo=allTodo)
     
-
+#demo for reference todo
 @app.route('/show')
 def products():
     allTodo = Todo.query.all()
     print(allTodo)
     return 'hello_world'
 
+
+#update todo
 @app.route('/update/<int:srno>', methods=['GET','POST'])
 def update(srno):
     if request.method=='POST':
@@ -77,6 +68,9 @@ def update(srno):
     todo = Todo.query.filter_by(srno=srno).first()
     return render_template('update.html',todo=todo)
 
+
+#delete todo
+
 @app.route('/delete/<int:srno>')
 def delete(srno):
     todo = Todo.query.filter_by(srno=srno).first()
@@ -85,13 +79,13 @@ def delete(srno):
     return redirect ("/")
 
 
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
 
-#to create db
-#use from app import app,db
+#to create db use from app import app,db
 #>>> with app.app_context():        
 #...     db.create_all()
 #to start env using cmd .\env\Scripts\activate
