@@ -31,45 +31,15 @@ class Todo(db.Model):
         return f"{self.srno} -{self.title}"
 
 
-#oauth 2 setup
-appConf = {
-    "OAUTH2_CLIENT_ID": "web_app",
-    "OAUTH2_CLIENT_SECRET": "BhSDZFLpMMkC28cdhxxfBM5eAIMIJoGe",
-    "OAUTH2_ISSUER": "http://localhost:8080/realms/myorg",
-    "FLASK_SECRET": "stringggg",
-    "FLASK_PORT": 3000
-} 
-
-#app = Flask(__name__)
-app.secret_key = appConf.get("FLASK_SECRET")
-
-oauth = OAuth(app)
-oauth.register(
-    "myApp",
-    client_id=appConf.get("OAUTH2_CLIENT_ID"),
-    client_secret=appConf.get("OAUTH2_CLIENT_SECRET"),
-    client_kwargs={
-        "scope": "openid profile email",
-        # 'code_challenge_method': 'S256'  # enable PKCE
-    },
-    server_metadata_url=f'{appConf.get("OAUTH2_ISSUER")}/.well-known/openid-configuration',
-)
-
-
-@app.route('/login')
-def login():
-    if "user" in session:
-        abort(404)
-    return oauth.myApp.authorize_redirect(redirect_uri=url_for("callback", _external=True))
-
-
-@app.route("/callback")
-def callback():
-    token = oauth.myApp.authorize_access_token()
-    session["user"] = token
-    return redirect(url_for("home"))
-
-
+ 
+KEYCLOAK_CONFIG = {
+    'REALM_NAME': 'your_realm_name',
+    'CLIENT_ID': 'your_client_id',
+    'CLIENT_SECRET': 'your_client_secret',
+    'KEYCLOAK_BASE_URL': 'https://your-keycloak-domain/auth',  # Replace with your Keycloak URL
+    'REDIRECT_URI': 'http://localhost:5000/callback',  # Your application's callback URL after login
+    'LOGOUT_URI': 'http://localhost:5000/logout',
+}
 
 
 #dont -----------------------------><-----------------
