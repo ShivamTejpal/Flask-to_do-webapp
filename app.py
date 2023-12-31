@@ -1,7 +1,6 @@
 from urllib.parse import quote_plus, urlencode
-from flask import Flask,render_template,request,redirect,jsonify
+from flask import Flask,render_template,request,redirect,url_for,session,abort
 #from flask_graphql import GraphQLView
-import json
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from authlib.integrations.flask_oauth2 import ResourceProtector
@@ -9,7 +8,7 @@ from authlib.jose.rfc7517.jwk import JsonWebKey
 from authlib.oauth2.rfc7523 import JWTBearerTokenValidator
 from urllib.request import urlopen
 from authlib.integrations.flask_client import OAuth
-
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///todo.db"
@@ -32,6 +31,48 @@ class Todo(db.Model):
         return f"{self.srno} -{self.title}"
 
 
+#oauth 2 setup
+appConf = {
+    "OAUTH2_CLIENT_ID": "web_app",
+    "OAUTH2_CLIENT_SECRET": "BhSDZFLpMMkC28cdhxxfBM5eAIMIJoGe",
+    "OAUTH2_ISSUER": "http://localhost:8080/realms/myorg",
+    "FLASK_SECRET": "stringggg",
+    "FLASK_PORT": 3000
+} 
+
+#app = Flask(__name__)
+app.secret_key = appConf.get("FLASK_SECRET")
+
+oauth = OAuth(app)
+oauth.register(
+    "myApp",
+    client_id=appConf.get("OAUTH2_CLIENT_ID"),
+    client_secret=appConf.get("OAUTH2_CLIENT_SECRET"),
+    client_kwargs={
+        "scope": "openid profile email",
+        # 'code_challenge_method': 'S256'  # enable PKCE
+    },
+    server_metadata_url=f'{appConf.get("OAUTH2_ISSUER")}/.well-known/openid-configuration',
+)
+
+
+@app.route('/login')
+def login():
+    if "user" in session:
+        abort(404)
+    return oauth.myApp.authorize_redirect(redirect_uri=url_for("callback", _external=True))
+
+
+@app.route("/callback")
+def callback():
+    token = oauth.myApp.authorize_access_token()
+    session["user"] = token
+    return redirect(url_for("home"))
+
+
+
+
+#dont -----------------------------><-----------------
 @app.route('/',methods=['GET','POST'])
 def home():
     if request.method == "POST":
@@ -42,14 +83,10 @@ def home():
         db.session.commit()
 
     allTodo = Todo.query.all()
-    return render_template('index.html',allTodo=allTodo)
-    
-#demo for reference todo
-@app.route('/show')
-def products():
-    allTodo = Todo.query.all()
-    print(allTodo)
-    return 'hello_world'
+    user_session = session.get("user")  # Renamed the local variable
+    pretty = json.dumps(user_session, indent=4)  # Updated variable name
+    return render_template('index.html', allTodo=allTodo)
+
 
 
 #update todo
