@@ -59,7 +59,7 @@ def loggedOut():
        abort(404)
        return redirect(url_for("home"))
    else:
-       return "You have been successfully logged out!"
+       return render_template("logout.html")
 
 @app.route("/logout")
 def logout():
