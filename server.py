@@ -13,7 +13,7 @@ appConf = {
 }
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = appConf.get("FLASK_SECRET")
 
 oauth = OAuth(app)
 oauth.register(
@@ -30,17 +30,15 @@ oauth.register(
 @app.route("/")
 def home():
     return render_template(
-        "login.html",
+        "home.html",
         session=session.get("user"),
         pretty=json.dumps(session.get("user"), indent=4),
     )
 
 @app.route("/callback")
 def callback():
-    print("executed")
     token = oauth.myApp.authorize_access_token()
     session["user"] = token
-    session["user_id"]=token["sub"]
     return redirect(url_for("home"))
 
 
@@ -56,15 +54,15 @@ def login():
 
 @app.route("/loggedout")
 def loggedOut():
-    # check if session already present
-    if "user" in session:
-        abort(404)
-    return redirect(url_for("home"))
-
+   # check if session already present
+   if "user" in session:
+       abort(404)
+       return redirect(url_for("home"))
+   else:
+       return "You have been successfully logged out!"
 
 @app.route("/logout")
 def logout():
-    # https://stackoverflow.com/a/72011979/2746323
     id_token = session["user"]["id_token"]
     session.clear()
     return redirect(
