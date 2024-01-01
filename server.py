@@ -37,19 +37,22 @@ def home():
 
 @app.route("/callback")
 def callback():
+    print("executed")
     token = oauth.myApp.authorize_access_token()
     session["user"] = token
+    session["user_id"]=token["sub"]
     return redirect(url_for("home"))
 
 
 @app.route("/login")
 def login():
-    print(session.get('user'))
     # check if session already present
     if "user" in session:
+        #user_id = session["user_id"]
+        #print(user_id)
         abort(404)
     return oauth.myApp.authorize_redirect(redirect_uri='http://127.0.0.1:8000/')
-
+    
 
 @app.route("/loggedout")
 def loggedOut():
