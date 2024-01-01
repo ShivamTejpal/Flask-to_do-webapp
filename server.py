@@ -44,10 +44,11 @@ def callback():
 
 @app.route("/login")
 def login():
+    print(session.get('user'))
     # check if session already present
     if "user" in session:
         abort(404)
-    return oauth.myApp.authorize_redirect(redirect_uri='http://127.0.0.1:5000/')
+    return oauth.myApp.authorize_redirect(redirect_uri='http://127.0.0.1:8000/')
 
 
 @app.route("/loggedout")
